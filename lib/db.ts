@@ -1,39 +1,29 @@
-import { error } from "console";
+// db.ts
 import mongoose from "mongoose";
 
-const MONGODB_URL = process.env.MONGODB_URL!;
-
-if (!MONGODB_URL) {
-  throw new Error("Please define mong_uri in env variables");
-}
-
-let cached = global.mongoose;
-
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
+if (!global.mongoose) {
+  global.mongoose = { conn: null, promise: null };
 }
 
 export async function connectToDatabase() {
-  if (cached.conn) {
-    return cached.conn;
+  const MONGODB_URL = process.env.MONGODB_URL;
+  if (!MONGODB_URL) {
+    throw new Error("MONGODB_URL is not defined");
   }
 
-  if (!cached.promise) {
-    const opts = {
-      bufferCommands: true,
-      maxPoolSize: 10,
-    };
-    // mongoose.connect(MONGODB_URL, opts).then(() => mongoose.connection);
-    cached.promise = mongoose
-      .connect(MONGODB_URL, opts)
-      .then(() => mongoose.connection);
-  }
-  try {
-    cached.conn = await cached.promise;
-  } catch (error) {
-    cached.promise = null;
-    throw error;
+  if (global.mongoose.conn) {
+    return global.mongoose.conn;
   }
 
-  return cached.conn;
+  if (!global.mongoose.promise) {
+    global.mongoose.promise = mongoose
+      .connect(MONGODB_URL, {
+        bufferCommands: false,
+        maxPoolSize: 10,
+      })
+      .then((mongooseInstance) => mongooseInstance.connection);
+  }
+
+  global.mongoose.conn = await global.mongoose.promise;
+  return global.mongoose.conn;
 }
