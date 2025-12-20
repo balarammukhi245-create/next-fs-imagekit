@@ -5,18 +5,19 @@ export async function GET() {
   try {
     if (
       !process.env.IMAGEKIT_PRIVATE_KEY ||
-      !process.env.NEXT_PUBLIC_PUBLIC_KEY
+      !process.env.IMAGEKIT_PUBLIC_KEY
     ) {
       throw new Error("ImageKit env variables missing");
     }
+
     const authenticationParameters = getUploadAuthParams({
-      privateKey: process.env.IMAGEKIT_PRIVATE_KEY as string, // Never expose this on client side
-      publicKey: process.env.NEXT_PUBLIC_PUBLIC_KEY as string,
+      privateKey: process.env.IMAGEKIT_PRIVATE_KEY, // server-only
+      publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
     });
 
     return NextResponse.json({
       authenticationParameters,
-      publicKey: process.env.NEXT_PUBLIC_PUBLIC_KEY,
+      publicKey: process.env.IMAGEKIT_PUBLIC_KEY,
     });
   } catch (error) {
     console.error("ImageKit auth error:", error);
